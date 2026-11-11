@@ -2,7 +2,9 @@ package com.example.orbitalstrike;
 
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -20,9 +22,10 @@ public class OrbitalStrike {
 	public static final int CHARGE_TICKS = 90;    // 20 тиков = 1 сек
 	public static final int BEAM_APPEAR_TICKS = 25; // за сколько тиков до выстрела появляется тонкий луч
 	public static final int FIRE_TICKS = 50;
-	public static final double HEIGHT = 30.0;     // высота кольца над целью
-	public static final double RING_RADIUS = 4.0; // радиус кольца красных точек
-	public static final double RADIUS = 2.5;      // радиус поражения луча
+	public static final double HEIGHT = 150.0;    // высота кольца над целью (луч бьёт "из неба")
+	public static final double RING_RADIUS = 14.0; // радиус кольца красных точек (большой, чтобы было видно с высоты)
+	public static final double RADIUS = 3.0;      // радиус поражения луча
+	public static final double VIEW_DISTANCE = 300.0; // кому показывать частицы
 	public static final float DAMAGE = 4.0f;
 	public static final int DAMAGE_INTERVAL = 4;
 	public static final int FIRE_SECONDS = 5;
@@ -69,6 +72,16 @@ public class OrbitalStrike {
 		return false;
 	}
 
+
+	/** Показывает частицы всем игрокам поблизости, даже если частица далеко (нужно для луча из неба). */
+	private void emit(ParticleOptions options, double x, double y, double z,
+	                  int count, double dx, double dy, double dz) {
+		for (ServerPlayer p : level.players()) {
+			if (p.distanceToSqr(target.x, target.y, target.z) > VIEW_DISTANCE * VIEW_DISTANCE) continue;
+			level.sendParticles(p, options, true, true, x, y, z, count, dx, dy, dz, 0.0);
+		}
+	}
+
 	/** 4 точки -> 6 -> 8, как на скриншотах. */
 	private int dotsFor(int a) {
 		double p = (double) a / CHARGE_TICKS;
@@ -80,9 +93,9 @@ public class OrbitalStrike {
 	private void drawRing(int dots) {
 		for (int i = 0; i < dots; i++) {
 			double ang = Math.PI * 2 * i / dots;
-			level.sendParticles(RED_DOT,
+			emit(RED_DOT,
 					ringPos.x + Math.cos(ang) * RING_RADIUS, ringPos.y, ringPos.z + Math.sin(ang) * RING_RADIUS,
-					1, 0, 0, 0, 0);
+					1, 0, 0, 0);
 		}
 	}
 
@@ -91,7 +104,7 @@ public class OrbitalStrike {
 		double progress = Math.min(1.0, (double) t / BEAM_APPEAR_TICKS);
 		double bottom = ringPos.y - HEIGHT * progress;
 		for (double y = ringPos.y; y >= bottom; y -= 1.0) {
-			level.sendParticles(ParticleTypes.END_ROD, target.x, y, target.z, 1, 0.02, 0, 0.02, 0.0);
+			emit(ParticleTypes.END_ROD, target.x, y, target.z, 2, 0.05, 0, 0.05);
 		}
 	}
 
@@ -105,8 +118,8 @@ public class OrbitalStrike {
 
 		// толстый белый луч из центра
 		for (double y = ringPos.y; y >= target.y; y -= 1.0) {
-			level.sendParticles(ParticleTypes.END_ROD, target.x, y, target.z, 3, 0.25, 0, 0.25, 0.0);
-			level.sendParticles(WHITE, target.x, y, target.z, 1, 0.3, 0, 0.3, 0.0);
+			emit(ParticleTypes.END_ROD, target.x, y, target.z, 3, 0.3, 0, 0.3);
+			emit(WHITE, target.x, y, target.z, 1, 0.35, 0, 0.35);
 		}
 
 		if (fireAge % DAMAGE_INTERVAL == 0) {
