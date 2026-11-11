@@ -7,9 +7,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: orbitalstrike-fabric-26.3
     steps:
       - uses: actions/checkout@v4
 
@@ -21,12 +18,18 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: current
-          build-root-directory: orbitalstrike-fabric-26.3
+
+      - name: Find project folder
+        id: p
+        run: echo "dir=$(dirname "$(find . -name settings.gradle -not -path './.git/*' | head -n1)")" >> "$GITHUB_OUTPUT"
 
       - name: Build
+        working-directory: ${{ steps.p.outputs.dir }}
         run: gradle build --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:
           name: orbitalstrike-jar
-          path: orbitalstrike-fabric-26.3/build/libs/*.jar
+          path: |
+            **/build/libs/*.jar
+            !**/build/libs/*-sources.jar
