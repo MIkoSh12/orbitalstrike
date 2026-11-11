@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "orbitalstrike",
+  "version": "${version}",
+  "name": "Orbital Strike",
+  "description": "Orbital strike: a ring appears in the sky, charges, then fires a beam down.",
+  "authors": ["you"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.example.orbitalstrike.OrbitalStrikeMod"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
