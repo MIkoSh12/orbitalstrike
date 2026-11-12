@@ -89,8 +89,8 @@ public class OrbitalCommand {
 		set.then(num("step", "шаг частиц луча (меньше = плотнее)", 0.25, 2, v -> OrbitalConfig.beamStep = v));
 		set.then(num("charge", "зарядка, секунды", 0.5, 30, v -> OrbitalConfig.chargeTicks = (int) Math.round(v * 20)));
 		set.then(num("fire", "длительность луча, секунды", 0.5, 30, v -> OrbitalConfig.fireTicks = (int) Math.round(v * 20)));
-		set.then(num("damage", "урон за удар", 0, 100, v -> OrbitalConfig.damage = (float) v));
-		set.then(num("power", "сила взрыва", 0, 20, v -> OrbitalConfig.explosionPower = (float) v));
+		set.then(num("damage", "урон за удар", 0, 100, v -> OrbitalConfig.damage = v.floatValue()));
+		set.then(num("power", "сила взрыва", 0, 20, v -> OrbitalConfig.explosionPower = v.floatValue()));
 		set.then(bool("explosion", "взрыв ломает блоки", v -> OrbitalConfig.realExplosion = v));
 		set.then(bool("shake", "тряска камеры", v -> OrbitalConfig.shakeEnabled = v));
 		root.then(set);
