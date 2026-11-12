@@ -29,7 +29,8 @@ public class OrbitalStrike {
 
 	public static final double BEAM_LENGTH = 100.0; // расстояние от кольца до цели
 	public static final double TILT_DEGREES = 30.0; // угол от вертикали (0 = строго сверху)
-	public static final double RING_RADIUS = 12.0;  // радиус кольца красных точек
+	public static final double RING_RADIUS = 10.0;  // радиус кольца красных точек
+	public static final double BEAM_STEP = 0.5;     // шаг частиц на луче (меньше = плотнее, но тяжелее для игры)
 	public static final double RADIUS = 3.0;        // толщина зоны поражения луча
 	public static final double VIEW_DISTANCE = 300.0;
 
@@ -38,8 +39,12 @@ public class OrbitalStrike {
 	public static final int FIRE_SECONDS = 5;
 
 	// Взрыв: false = только эффект (блоки целы), true = настоящий взрыв с разрушением блоков
-	public static final boolean REAL_EXPLOSION = false;
+	public static final boolean REAL_EXPLOSION = true;
 	public static final float EXPLOSION_POWER = 4.0f;
+
+	// Тряска экрана при взрыве
+	public static final double SHAKE_DISTANCE = 60.0; // кого трясёт
+	public static final int SHAKE_TICKS = 24;         // сколько тиков трясёт после начала выстрела
 
 	private static final DustParticleOptions RED_DOT = new DustParticleOptions(0xFF0000, 4.0f);
 	private static final DustParticleOptions WHITE = new DustParticleOptions(0xFFFFFF, 3.0f);
@@ -94,6 +99,7 @@ public class OrbitalStrike {
 			tickFire(age - CHARGE_TICKS);
 		} else {
 			explode(0.6f);
+			shake();
 			return true;
 		}
 
@@ -124,7 +130,7 @@ public class OrbitalStrike {
 			Vec3 p = ringPos
 					.add(axisU.scale(Math.cos(ang) * RING_RADIUS))
 					.add(axisV.scale(Math.sin(ang) * RING_RADIUS));
-			emit(RED_DOT, p.x, p.y, p.z, 3, 0.25, 0.25, 0.25);
+			emit(RED_DOT, p.x, p.y, p.z, 1, 0, 0, 0);
 		}
 	}
 
@@ -132,7 +138,7 @@ public class OrbitalStrike {
 	private void drawThinBeam(int t) {
 		double progress = Math.min(1.0, (double) t / BEAM_APPEAR_TICKS);
 		double stop = BEAM_LENGTH * (1.0 - progress);
-		for (double d = BEAM_LENGTH; d >= stop; d -= 1.0) {
+		for (double d = BEAM_LENGTH; d >= stop; d -= BEAM_STEP) {
 			Vec3 p = beamPoint(d);
 			emit(ParticleTypes.END_ROD, p.x, p.y, p.z, 1, 0.02, 0.02, 0.02);
 		}
@@ -143,10 +149,14 @@ public class OrbitalStrike {
 			explode(1.0f);
 		}
 
+		if (fireAge < SHAKE_TICKS && fireAge % 3 == 0) {
+			shake();
+		}
+
 		drawRing(8);
 
 		// толстый белый луч от кольца до цели
-		for (double d = BEAM_LENGTH; d >= 0; d -= 1.0) {
+		for (double d = BEAM_LENGTH; d >= 0; d -= BEAM_STEP) {
 			Vec3 p = beamPoint(d);
 			emit(WHITE, p.x, p.y, p.z, 1, 0.1, 0.1, 0.1);
 			emit(ParticleTypes.END_ROD, p.x, p.y, p.z, 1, 0.08, 0.08, 0.08);
@@ -157,6 +167,14 @@ public class OrbitalStrike {
 
 		if (fireAge % DAMAGE_INTERVAL == 0) {
 			damageAlongBeam();
+		}
+	}
+
+	/** Тряска: проигрываем игрокам рядом анимацию получения урона (камера дёргается). */
+	private void shake() {
+		for (ServerPlayer p : level.players()) {
+			if (p.distanceToSqr(target.x, target.y, target.z) > SHAKE_DISTANCE * SHAKE_DISTANCE) continue;
+			level.broadcastEntityEvent(p, (byte) 2);
 		}
 	}
 
@@ -184,6 +202,9 @@ public class OrbitalStrike {
 				(int) (20 * scale), 1.5 * scale, 0.6, 1.5 * scale);
 		level.playSound(null, target.x, target.y, target.z,
 				SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.HOSTILE, 10.0f * scale, 0.6f);
+
+		level.playSound(null, target.x, target.y, target.z,
+				SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.HOSTILE, 10.0f * scale, 0.5f);
 
 		if (REAL_EXPLOSION) {
 			level.explode(null, target.x, target.y, target.z,
