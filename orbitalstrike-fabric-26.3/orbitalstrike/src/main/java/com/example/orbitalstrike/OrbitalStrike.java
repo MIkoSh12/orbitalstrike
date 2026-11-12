@@ -134,7 +134,7 @@ public class OrbitalStrike {
 		double stop = BEAM_LENGTH * (1.0 - progress);
 		for (double d = BEAM_LENGTH; d >= stop; d -= 1.0) {
 			Vec3 p = beamPoint(d);
-			emit(ParticleTypes.END_ROD, p.x, p.y, p.z, 2, 0.05, 0.05, 0.05);
+			emit(ParticleTypes.END_ROD, p.x, p.y, p.z, 1, 0.02, 0.02, 0.02);
 		}
 	}
 
@@ -148,8 +148,8 @@ public class OrbitalStrike {
 		// толстый белый луч от кольца до цели
 		for (double d = BEAM_LENGTH; d >= 0; d -= 1.0) {
 			Vec3 p = beamPoint(d);
-			emit(ParticleTypes.END_ROD, p.x, p.y, p.z, 3, 0.3, 0.3, 0.3);
-			emit(WHITE, p.x, p.y, p.z, 1, 0.35, 0.35, 0.35);
+			emit(WHITE, p.x, p.y, p.z, 1, 0.1, 0.1, 0.1);
+			emit(ParticleTypes.END_ROD, p.x, p.y, p.z, 1, 0.08, 0.08, 0.08);
 		}
 
 		// искры в точке попадания
@@ -179,9 +179,9 @@ public class OrbitalStrike {
 		emit(ParticleTypes.EXPLOSION_EMITTER, target.x, target.y + 1, target.z,
 				Math.max(1, Math.round(3 * scale)), 1.5 * scale, 0.5, 1.5 * scale);
 		emit(ParticleTypes.FLAME, target.x, target.y + 1, target.z,
-				(int) (60 * scale), 2.0 * scale, 0.7, 2.0 * scale);
+				(int) (25 * scale), 1.2 * scale, 0.5, 1.2 * scale);
 		emit(ParticleTypes.CLOUD, target.x, target.y + 1, target.z,
-				(int) (60 * scale), 2.5 * scale, 0.8, 2.5 * scale);
+				(int) (20 * scale), 1.5 * scale, 0.6, 1.5 * scale);
 		level.playSound(null, target.x, target.y, target.z,
 				SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.HOSTILE, 10.0f * scale, 0.6f);
 
